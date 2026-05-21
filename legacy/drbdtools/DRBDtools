@@ -1,0 +1,133 @@
+#!/usr/bin/python
+# IMPORTANT NOTICE :
+# This script is supposed to be run with root privilege
+import sys, os, commands, time
+
+# Defining variables
+FunctionalMode = ''
+Resource=''
+Commande=''
+
+
+def exit(code):
+	sys.exit(code)
+
+# get arguments from command line
+def extractArg():
+	global FunctionalMode
+	global Resource
+	global Commande
+	nbArgs=len(sys.argv)
+	if nbArgs != 4 :
+		print 'Error : less or too many arguments in the command line'
+		usage()
+		exit( -1 )
+	else :
+		FunctionalMode=sys.argv[3]
+		Resource=sys.argv[2]
+		Commande=sys.argv[1]
+
+# script usage definition
+def usage():
+	print '***********************************************************************************************************************************'
+	print 'Help (EN/US) :'
+	print '> DRBDtools <Action> <DRBD resource name> <Functional Mode>'
+	print 'Action could be :'
+	print '							Repair'
+	print '							ForceSynchro'
+	print 'FunctionalMode could be : '
+	print '							Master'
+	print '							Slave'
+	print 'DRBD resource name is the name of your cluster in DRBD conf files'
+	print 'Notice that this command has to be run on all your DRBD cluster Server with the right arguments'
+	print 'When you will have run this script on both server the master and the slaves, you will see the progress of the resynchronisation.'
+	print 'When the synchronisation is done and marked at 100% you can stop the script with the Ctrl +  C key shortcut'
+	print '***********************************************************************************************************************************'
+	print 'Aide FR :'
+	print '> DRBDtools <Action> <Nom de la ressource DRBD> <Role du serveur>'
+	print 'Action pouvant etre :'
+	print '							Repair'
+	print '							ForceSynchro'
+	print 'Le role du serveur pouvant etre :'
+	print '							Master'
+	print '							Slave'
+	print 'Le nom de la ressource DRBD quand a elle peut etre trouvee directment dans le fichier de configuration du service'
+	print 'Important cette commande doit etre executee en meme temps sur tous les serveurs de votre cluster DRBD avec les bons arguments'
+	print 'Une fois lancee sur tous les serveurs une barre de progression vous indiquera lorsque de la fin de l operation'
+	print 'Une fois que la barre sera a 100% quittez la commande en tapant simultanement sur les touches Ctrl et C'
+	print '***********************************************************************************************************************************'
+
+
+# repair function definition
+def Repair_Master_actions():
+	global Resource
+	print 'Starting drbd service'
+	os.system('/etc/init.d/drbd start')
+	print 'Setting cluster in waiting connection mode'
+	os.system('drbdadm connect %s' % Resource)
+	os.system('drbdadm primary %s' % Resource)
+	print 'Waiting the ending of synchronisation between the two servers'
+	os.system('watch /etc/init.d/drbd status')
+
+
+
+def Repair_Slave_actions():
+	global Resource
+	print 'Starting drbd service'
+	os.system('/etc/init.d/drbd start')
+	print 'Setting cluster in waiting connection mode'
+	os.system('drbdadm disconnect %s' % Resource)
+	os.system('drbdadm -- -- discard-my-data connect %s' % Resource)
+	print 'Waiting the ending of synchronisation between the two servers'
+	print 'Please be patient, this could take a while'
+	os.system('watch /etc/init.d/drbd status')
+
+# synchronisation function definition
+
+def Synchro_Master_actions() :
+	global Resource
+	print 'Starting drbd service'
+	os.system('/etc/init.d/drbd start')
+	print 'Setting cluster in waiting connection mode'
+	os.system('drbdadm connect %s' % Resource)
+	os.system('drbdadm primary %s' % Resource)
+	print 'Waiting the ending of synchronisation between the two servers'
+	os.system('watch /etc/init.d/drbd status')
+
+def Synchro_Slave_actions() :
+	global Resource
+	print 'Starting drbd service'
+	os.system('/etc/init.d/drbd start')
+	print 'Setting cluster in waiting connection mode'
+	os.system('drbdadm disconnect %s' % Resource)
+	os.system('drbdadm invalidate %s' % Resource)
+	os.system('drbdadm connect %s' % Resource)
+	print 'Waiting the ending of synchronisation between the two servers'
+	os.system('watch /etc/init.d/drbd status')
+
+
+
+# main program
+extractArg()
+if Commande == 'Repair':
+	if FunctionalMode == 'Master':
+		Repair_Master_actions()
+	elif FunctionalMode == 'Slave':
+		Repair_Slave_actions()
+	else :
+		print'You might not have use the good options' 
+		usage()
+		exit(-1)
+elif Commande == 'ForceSynchro':
+	if FunctionalMode == 'Master':
+		Synchro_Master_actions()
+	elif FunctionalMode == 'Slave':
+		Synchro_Slave_actions()
+	else :
+		print'You might not have use the good options' 
+		usage()
+		exit(-1)
+else :
+	print'You might not have use the good options' 
+	usage()
+	exit(-1)
