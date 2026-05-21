@@ -8,21 +8,18 @@ version = "0.1.0"
 description = "Professional DRBD management and Linux infrastructure toolkit by Qassem."
 readme = "README.md"
 requires-python = ">=3.10"
-license = {text = "MIT"}
-authors = [{name = "Kasem Adra"}]
-keywords = ["drbd", "linux", "infrastructure", "automation", "qassem"]
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: POSIX :: Linux",
+authors = [
+    { name = "Kasem Adra" }
 ]
+license = { text = "MIT" }
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0.0"]
+dev = [
+    "pytest>=8.0.0"
+]
 
 [project.scripts]
 qdrbd = "qdrbdtools.cli:main"
 
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-pythonpath = ["."]
+[tool.setuptools]
+packages = ["qdrbdtools"]
